@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>摸鱼 · 原型 V1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF9F4; --card:#FFFFFF; --line:#EDE9DF; --line-soft:#F1EFE8;
+  --teal-900:#04342C; --teal-700:#085041; --teal-600:#0F6E56; --teal-200:#5DCAA5; --teal-50:#E1F5EE;
+  --sand-50:#FAEEDA; --sand-800:#633806;
+  --ink:#2C2C2A; --ink-2:#5F5E5A; --ink-3:#888780; --ink-4:#B4B2A9;
+  --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--sans);background:#F1EFE8;color:var(--ink)}
+.phone{position:relative;max-width:430px;width:100%;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden}
+@media(min-width:480px){
+  body{display:flex;align-items:center;justify-content:center}
+  .phone{height:min(880px,calc(100dvh - 24px));border-radius:36px;border:1px solid #E5E2D8}
+}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);opacity:1;visibility:visible;transition:opacity .5s ease,visibility .5s}
+.screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 10px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:8px}
+.brand-mark{width:30px;height:30px;border-radius:50%;background:var(--teal-600);display:flex;align-items:center;justify-content:center}
+.brand-name{font-family:var(--serif);font-weight:600;font-size:17px;color:var(--teal-900)}
+.icon-btn{background:none;border:none;color:var(--ink-3);font-size:20px;line-height:1;cursor:pointer;padding:4px}
+
+.scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:2px 16px 12px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+.greet{padding:4px 4px 14px}
+.greet h1{font-family:var(--serif);font-weight:500;font-size:21px;color:var(--ink);line-height:1.4}
+.greet p{font-size:12px;color:var(--ink-3);margin-top:3px}
+
+.carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -4px}
+.carousel::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:center;padding:0 4px}
+.evi-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;position:relative;overflow:hidden}
+.evi-fish{position:absolute;right:-10px;top:-8px;opacity:.9}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:999px;margin-bottom:10px;position:relative}
+.badge.teal{background:var(--teal-50);color:var(--teal-700)}
+.badge.gray{background:var(--line-soft);color:var(--ink-2)}
+.evi-title{font-family:var(--serif);font-weight:500;font-size:17px;color:var(--ink);margin-bottom:6px;position:relative}
+.evi-body{font-size:12.5px;line-height:1.7;color:var(--ink-2);margin-bottom:12px;position:relative}
+.evi-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line-soft);padding-top:10px}
+.evi-src{font-size:11.5px;color:var(--ink-3)}
+.evi-more{font-size:11.5px;color:var(--teal-600);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:3px}
+.evi-detail{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.evi-detail.open{max-height:80px}
+.evi-detail p{font-size:11.5px;line-height:1.7;color:var(--ink-3);padding-top:8px;word-break:break-all}
+.dots{display:flex;justify-content:center;gap:5px;margin:11px 0 18px}
+.dot{width:4px;height:4px;border-radius:999px;background:#D3D1C7;transition:all .3s}
+.dot.on{width:14px;background:var(--teal-600)}
+
+.chat{display:flex;flex-direction:column;gap:12px;padding-bottom:8px}
+.row{display:flex;gap:9px;align-items:flex-start}
+.row.user{justify-content:flex-end}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--teal-50);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bubble{background:var(--card);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 14px;max-width:82%;font-size:13.5px;line-height:1.7;color:var(--ink)}
+.row.user .bubble{background:var(--teal-600);border:none;border-radius:16px 4px 16px 16px;color:var(--teal-50)}
+.typing{display:flex;gap:4px;padding:4px 2px}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--ink-4);animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-left:39px;animation:rise .45s ease}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.panel-label{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.caps{display:flex;gap:7px;margin-bottom:16px}
+.cap{flex:1;text-align:center;border:1px solid var(--line);background:var(--card);color:var(--ink-2);font-size:12.5px;padding:8px 0;border-radius:999px;cursor:pointer;position:relative;transition:all .2s;font-family:var(--sans)}
+.cap.sel{background:var(--teal-600);border-color:var(--teal-600);color:#fff}
+.cap-rec{position:absolute;top:-8px;right:-2px;background:var(--sand-50);color:var(--sand-800);font-size:10.5px;padding:1px 7px;border-radius:999px}
+.presel{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-3);margin-bottom:12px}
+.presel svg{flex-shrink:0}
+.cta{width:100%;background:var(--teal-600);border:none;border-radius:999px;padding:13px 0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:500;color:#fff;cursor:pointer;font-family:var(--sans);transition:transform .15s}
+.cta:active{transform:scale(.98)}
+.safety{font-size:10.5px;color:var(--ink-4);text-align:center;margin-top:10px;line-height:1.6}
+
+.dock{flex-shrink:0;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:var(--bg)}
+.tags{display:flex;gap:8px;margin-bottom:12px}
+.tag{flex:1;text-align:center;border:1px solid var(--teal-200);background:var(--card);color:var(--teal-700);font-size:12.5px;padding:8px 0;border-radius:999px;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.tag:active{background:var(--teal-50)}
+.inputbar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 16px}
+.inputbar input{flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--ink);font-family:var(--sans)}
+.inputbar input::placeholder{color:var(--ink-4)}
+.send{width:34px;height:34px;border-radius:50%;background:var(--teal-600);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+
+.breath-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.breath-cancel{position:absolute;top:20px;left:16px}
+.ring{position:relative;width:210px;height:210px;display:flex;align-items:center;justify-content:center;margin-bottom:42px}
+.ring::before{content:"";position:absolute;width:206px;height:206px;border-radius:50%;background:var(--teal-50)}
+.ball{position:absolute;width:120px;height:120px;border-radius:50%;background:var(--teal-600);transform:scale(1)}
+.ball-label{position:relative;font-size:15px;color:var(--teal-50);letter-spacing:.15em}
+.b-main{font-family:var(--serif);font-weight:500;font-size:16px;color:var(--ink);transition:opacity .6s;text-align:center;padding:0 24px}
+.b-sub{font-size:12px;color:var(--ink-3);margin:7px 0 30px;transition:opacity .6s}
+.b-start{opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .8s,transform .8s;background:var(--teal-600);border:none;border-radius:999px;padding:13px 46px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:#fff;cursor:pointer;font-family:var(--sans)}
+.b-start.show{opacity:1;pointer-events:auto;transform:none}
+
+.prac-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.ring.small{width:150px;height:150px;margin-bottom:34px}
+.ring.small::before{width:146px;height:146px}
+.ball.auto{width:86px;height:86px;animation:breathe 10s ease-in-out infinite}
+@keyframes breathe{0%{transform:scale(1)}40%{transform:scale(1.5)}100%{transform:scale(1)}}
+.p-title{font-family:var(--serif);font-weight:500;font-size:17px;color:var(--ink);margin-bottom:6px}
+.p-sub{font-size:12.5px;color:var(--ink-3);margin-bottom:8px}
+.p-note{font-size:11px;color:var(--ink-4);margin-bottom:36px}
+.p-end{background:none;border:1px solid var(--line);border-radius:999px;padding:11px 40px;font-size:13.5px;color:var(--ink-2);cursor:pointer;font-family:var(--sans)}
+
+.fb{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.fb .cap{flex:0 0 auto;padding:6px 14px}
+@media(prefers-reduced-motion:reduce){
+  .ball,.ball.auto{animation:none!important;transition:none!important}
+  .typing span{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <section class="screen" id="s-home">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark" data-fish="light"></div>
+        <span class="brand-name">摸鱼</span>
+      </div>
+      <button class="icon-btn" aria-label="菜单">☰</button>
+    </div>
+
+    <div class="scroll" id="scroll">
+      <div class="greet">
+        <h1 id="greet-h"></h1>
+        <p id="greet-p"></p>
+      </div>
+
+      <div class="carousel" id="carousel">
+        <div class="slide">
+          <div class="evi-card">
+            <span class="evi-fish" data-fish="pale" data-size="76"></span>
+            <span class="badge teal">科学实证</span>
+            <p class="evi-title">瑜伽与腰背健康</p>
+            <p class="evi-body">研究显示,规律的瑜伽练习可明显缓解慢性腰背不适,效果可持续六个月以上。</p>
+            <div class="evi-foot">
+              <span class="evi-src">Zhu 等 (2020) · PLOS ONE</span>
+              <button class="evi-more">查看来源 ›</button>
+            </div>
+            <div class="evi-detail"><p>Zhu 等 (2020),瑜伽对比非运动干预对慢性腰痛的影响,PLOS ONE。DOI: 10.1371/journal.pone.0238544</p></div>
+          </div>
+        </div>
+        <div class="slide">
+          <div class="evi-card">
+            <span class="evi-fish" data-fish="pale" data-size="76"></span>
+            <span class="badge teal">科学实证</span>
+            <p class="evi-title">呼吸与压力调节</p>
+            <p class="evi-body">延长呼气的慢呼吸练习可激活副交感神经,帮助身体从紧张状态中恢复。</p>
+            <div class="evi-foot">
+              <span class="evi-src">来源占位 · 上线前替换为文献</span>
+              <button class="evi-more">查看来源 ›</button>
+            </div>
+            <div class="evi-detail"><p>此卡为模板示意,正式上线前请替换为已核对的研究来源与 DOI。</p></div>
+          </div>
+        </div>
+        <div class="slide">
+          <div class="evi-card">
+            <span class="evi-fish" data-fish="pale" data-size="76"></span>
+            <span class="badge gray">今日热点</span>
+            <p class="evi-title">久坐两小时,该起来摸鱼了</p>
+            <p class="evi-body">热点文案卡与论文卡共用同一套版式,运营只需替换徽章、标题与正文。</p>
+            <div class="evi-foot">
+              <span class="evi-src">运营内容位 · 定期更换</span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dots" id="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+
+      <div class="chat" id="chat"></div>
+    </div>
+
+    <div class="dock">
+      <div class="tags" id="tags">
+        <button class="tag">松肩颈</button>
+        <button class="tag">舒腰背</button>
+        <button class="tag">缓压力</button>
+        <button class="tag">助睡眠</button>
+      </div>
+      <div class="inputbar">
+        <input id="inp" type="text" placeholder="我在听,想聊什么都可以" autocomplete="off">
+        <button class="send" id="send" aria-label="发送">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E1F5EE" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen hidden" id="s-breath">
+    <div class="breath-cancel"><button class="icon-btn" id="b-cancel" aria-label="返回">✕</button></div>
+    <div class="breath-wrap">
+      <div class="ring">
+        <div class="ball" id="ball"></div>
+        <span class="ball-label" id="ball-label">吸气</span>
+      </div>
+      <p class="b-main" id="b-main">正在思考,为你编排专属练习序列</p>
+      <p class="b-sub" id="b-sub">先跟着圆圈,把呼吸慢下来</p>
+      <button class="b-start" id="b-start">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="#E1F5EE"><path d="M8 5v14l11-7z"/></svg>
+        开始练习
+      </button>
+    </div>
+  </section>
+
+  <section class="screen hidden" id="s-prac">
+    <div class="prac-wrap">
+      <div class="ring small"><div class="ball auto"></div></div>
+      <p class="p-title" id="p-title">椅子上 · 松肩颈 · 10 分钟</p>
+      <p class="p-sub">跟着呼吸,慢慢开始</p>
+      <p class="p-note">V1 原型 · 此处接入练习视频</p>
+      <button class="p-end" id="p-end">结束练习</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return document.querySelectorAll(s)};
+
+var FISH=function(color,size){
+  return '<svg viewBox="0 0 32 32" width="'+size+'" height="'+size+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+  +'<path d="M20 4c6 5 7 13 1 18c-5 4-12 3-15-2"/>'
+  +'<path d="M6 20c-2 2-2 5-1 7"/>'
+  +'<path d="M6 20c-3 0-5 2-6 4"/>'
+  +'<path d="M14 13c2 2 2 5 0 7"/>'
+  +'<circle cx="20" cy="10" r="1.2" fill="'+color+'" stroke="none"/></svg>';
+};
+$$('[data-fish]').forEach(function(el){
+  var c=el.dataset.fish==='light'?'#E1F5EE':el.dataset.fish==='pale'?'#E1F5EE':'#0F6E56';
+  if(el.dataset.fish==='pale'){c='#EDF7F2';}
+  el.innerHTML=FISH(c, el.dataset.size||19);
+});
+
+var h=new Date().getHours();
+var G;
+if(h>=5&&h<11)G=['早上好,先摸条鱼再上工','新的一天,从松弛开始'];
+else if(h>=11&&h<14)G=['中午好,偷得浮生半刻闲','饭后正适合舒展一下'];
+else if(h>=14&&h<18)G=['下午好,该摸会儿鱼了','久坐的身体在等你照顾'];
+else if(h>=18&&h<23)G=['晚上好,把今天卸下来','适合安静下来的时刻'];
+else G=['夜深了,鱼都睡了','你也该慢慢沉下来了'];
+var d=new Date();
+$('#greet-h').textContent=G[0];
+$('#greet-p').textContent=(d.getMonth()+1)+'月'+d.getDate()+'日 · '+G[1];
+
+var car=$('#carousel'),dots=$$('#dots .dot');
+car.addEventListener('scroll',function(){
+  var i=Math.round(car.scrollLeft/car.clientWidth);
+  dots.forEach(function(dd,k){dd.classList.toggle('on',k===i)});
+},{passive:true});
+$$('.evi-more').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var det=btn.closest('.evi-card').querySelector('.evi-detail');
+    var open=det.classList.toggle('open');
+    btn.textContent=open?'收起 ‹':'查看来源 ›';
+  });
+});
+
+var chat=$('#chat'),scroll=$('#scroll');
+function toBottom(){requestAnimationFrame(function(){scroll.scrollTop=scroll.scrollHeight})}
+function botRow(inner){
+  var r=document.createElement('div');r.className='row';
+  r.innerHTML='<div class="avatar">'+FISH('#0F6E56',18)+'</div>'+inner;
+  chat.appendChild(r);toBottom();return r;
+}
+function botMsg(text){return botRow('<div class="bubble">'+text+'</div>')}
+function userMsg(text){
+  var r=document.createElement('div');r.className='row user';
+  r.innerHTML='<div class="bubble"></div>';
+  r.querySelector('.bubble').textContent=text;
+  chat.appendChild(r);toBottom();
+}
+function typing(cb,ms){
+  var r=botRow('<div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>');
+  setTimeout(function(){r.remove();cb()},ms||800);
+}
+
+var SCENES=['垫上','椅子上','站立','床上'];
+var DURS=[5,10,15,30];
+var REC={
+  '松肩颈':{scene:'椅子上',dur:10,reply:'肩颈紧绷是久坐的老朋友了~我按你的状态搭好了一段练习,直接开始就行,想调也可以调:'},
+  '舒腰背':{scene:'垫上',dur:15,reply:'腰背辛苦了~动作会放得很慢很安全,先看看这样安排合不合适:'},
+  '缓压力':{scene:'椅子上',dur:10,reply:'压力大的时候,身体比脑子先知道~我们用呼吸和伸展,把它一点点放下来:'},
+  '助睡眠':{scene:'床上',dur:15,reply:'睡前就不折腾了,来一段慢慢往下沉的练习:'}
+};
+
+var flow={tag:'',scene:'',dur:0};
+
+function capsHTML(list,sel,group,rec){
+  return '<div class="caps" data-group="'+group+'">'+list.map(function(v){
+    var s=(String(v)===String(sel))?' sel':'';
+    var badge=(group==='scene'&&v===rec)?'<span class="cap-rec">推荐</span>':'';
+    var label=(group==='dur')?(v+' 分钟').replace(' 分钟',v===5?' 分钟':''):v;
+    if(group==='dur'){label=(v===5)?'5 分钟':String(v);}
+    return '<button class="cap'+s+'" data-v="'+v+'">'+label+badge+'</button>';
+  }).join('')+'</div>';
+}
+
+function showPanel(tag){
+  var rec=REC[tag];
+  var night=(h>=22||h<5);
+  var scene=night&&tag!=='助睡眠'?'床上':rec.scene;
+  flow.tag=tag;flow.scene=scene;flow.dur=rec.dur;
+  var r=document.createElement('div');
+  r.innerHTML=
+   '<div class="panel">'
+  +'<p class="panel-label">练习场景</p>'+capsHTML(SCENES,scene,'scene',rec.scene)
+  +'<p class="panel-label">练习时长</p>'+capsHTML(DURS,rec.dur,'dur')
+  +'<div class="presel">'+FISH('#0F6E56',13)+'<span>已按你说的「'+tag+'」为你预选</span></div>'
+  +'<button class="cta"><svg width="15" height="15" viewBox="0 0 24 24" fill="#E1F5EE"><path d="M8 5v14l11-7z"/></svg>就这样,开始练习</button>'
+  +'<p class="safety">如有急性疼痛、孕期或术后等情况,请先咨询专业人士</p>'
+  +'</div>';
+  var panel=r.firstChild;
+  chat.appendChild(panel);toBottom();
+  panel.querySelectorAll('.caps').forEach(function(g){
+    g.addEventListener('click',function(e){
+      var b=e.target.closest('.cap');if(!b)return;
+      g.querySelectorAll('.cap').forEach(function(x){x.classList.remove('sel')});
+      b.classList.add('sel');
+      if(g.dataset.group==='scene')flow.scene=b.dataset.v;
+      else flow.dur=parseInt(b.dataset.v,10);
+    });
+  });
+  panel.querySelector('.cta').addEventListener('click',startBreath);
+}
+
+function locate(tag){
+  userMsg(tag);
+  typing(function(){
+    botMsg(REC[tag].reply);
+    setTimeout(function(){showPanel(tag)},350);
+  },900);
+}
+
+$('#tags').addEventListener('click',function(e){
+  var b=e.target.closest('.tag');if(!b)return;
+  locate(b.textContent);
+});
+
+function route(text){
+  userMsg(text);
+  var tag='';
+  if(/肩|颈|脖/.test(text))tag='松肩颈';
+  else if(/腰|背/.test(text))tag='舒腰背';
+  else if(/累|疲|压|烦|紧张|焦/.test(text))tag='缓压力';
+  else if(/睡|眠|失眠|困/.test(text))tag='助睡眠';
+  if(tag){
+    typing(function(){
+      botMsg(REC[tag].reply);
+      setTimeout(function(){showPanel(tag)},350);
+    },900);
+  }else{
+    typing(function(){
+      botMsg('收到~我可能还没完全听懂,下面四个里有接近的吗?也可以再多描述一点,比如哪里不舒服、想达到什么状态。');
+    },900);
+  }
+}
+function send(){
+  var v=$('#inp').value.trim();
+  if(!v)return;
+  $('#inp').value='';
+  route(v);
+}
+$('#send').addEventListener('click',send);
+$('#inp').addEventListener('keydown',function(e){if(e.key==='Enter')send()});
+
+var ball=$('#ball'),lbl=$('#ball-label'),bMain=$('#b-main'),bSub=$('#b-sub'),bStart=$('#b-start');
+var breathing=false,genDone=false,cycles=0,timer=null;
+
+function show(id){
+  $$('.screen').forEach(function(s){s.classList.add('hidden')});
+  $(id).classList.remove('hidden');
+}
+
+function startBreath(){
+  show('#s-breath');
+  bMain.style.opacity='1';bSub.style.opacity='1';
+  bMain.textContent='正在思考,为你编排专属练习序列';
+  bSub.textContent='先跟着圆圈,把呼吸慢下来';
+  bStart.classList.remove('show');
+  ball.style.transition='none';ball.style.transform='scale(1)';
+  breathing=true;genDone=false;cycles=0;
+  setTimeout(function(){genDone=true},6500);
+  timer=setTimeout(inhale,500);
+}
+function inhale(){
+  if(!breathing)return;
+  lbl.textContent='吸气';
+  ball.style.transition='transform 4s ease-in-out';
+  ball.style.transform='scale(1.55)';
+  timer=setTimeout(exhale,4000);
+}
+function exhale(){
+  if(!breathing)return;
+  lbl.textContent='呼气';
+  ball.style.transition='transform 6s ease-in-out';
+  ball.style.transform='scale(1)';
+  timer=setTimeout(function(){
+    if(!breathing)return;
+    cycles++;
+    if(genDone&&cycles>=1)ready();
+    else inhale();
+  },6000);
+}
+function ready(){
+  lbl.textContent='准备好了';
+  bMain.style.opacity='0';bSub.style.opacity='0';
+  setTimeout(function(){
+    bMain.textContent='练习编排好了';
+    bSub.textContent=flow.scene+' · '+flow.tag+' · '+flow.dur+' 分钟';
+    bMain.style.opacity='1';bSub.style.opacity='1';
+    bStart.classList.add('show');
+  },600);
+}
+function stopBreath(){
+  breathing=false;
+  if(timer)clearTimeout(timer);
+}
+$('#b-cancel').addEventListener('click',function(){stopBreath();show('#s-home')});
+bStart.addEventListener('click',function(){
+  stopBreath();
+  $('#p-title').textContent=flow.scene+' · '+flow.tag+' · '+flow.dur+' 分钟';
+  show('#s-prac');
+});
+
+var fbShown=false;
+$('#p-end').addEventListener('click',function(){
+  show('#s-home');
+  typing(function(){
+    var r=botRow('<div class="bubble">练完啦,今天照顾自己这件事,你已经做到了~现在感觉怎么样?'
+     +'<div class="fb"><button class="cap">舒服多了</button><button class="cap">还好</button><button class="cap">没什么感觉</button></div></div>');
+    r.querySelector('.fb').addEventListener('click',function(e){
+      var b=e.target.closest('.cap');if(!b)return;
+      userMsg(b.textContent);
+      typing(function(){botMsg('收到,我记下啦~下次编排会照着这个感觉再调一调。记得喝口水。')},800);
+    });
+  },900);
+});
+
+typing(function(){
+  botMsg('你好呀,我是小鱼。今天最想被照顾的是哪个部分?点下面的标签,或直接和我聊聊~');
+},1000);
+
+})();
+</script>
+</body>
+</html>
